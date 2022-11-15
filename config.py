@@ -5,6 +5,7 @@ import utils.utils as utils
 
 
 def read_arguments(train=True):
+
     parser = argparse.ArgumentParser()
     parser = add_all_arguments(parser, train)
     parser.add_argument('--phase', type=str, default='train')
@@ -18,6 +19,11 @@ def read_arguments(train=True):
     if train:
         opt.loaded_latest_iter = 0 if not opt.continue_train else load_iter(opt)
     utils.fix_seed(opt.seed)
+
+    if opt.gpu_ids == "auto":
+        opt.gpu_ids = os.environ.get('CUDA_VISIBLE_DEVICES').split(',')
+        print("using gpus {}".format(opt.gpu_ids))
+
     print_options(opt, parser)
     if train:
         save_options(opt, parser)
@@ -75,6 +81,9 @@ def add_all_arguments(parser, train):
 
 
 def set_dataset_default_lm(opt, parser):
+    if opt.dataset_mode == "shhq":
+        parser.set_defaults(lambda_labelmix=10.0)
+        parser.set_defaults(EMA_decay=0.9999)
     if opt.dataset_mode == "ade20k":
         parser.set_defaults(lambda_labelmix=10.0)
         parser.set_defaults(EMA_decay=0.9999)
